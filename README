@@ -1,5 +1,112 @@
-For details, please see wiki page:
-    http://code.google.com/p/plda/wiki/PLDAQuickStart
-    http://code.google.com/p/plda/wiki/PLDAManual
-    http://code.google.com/p/semi-supervised-lda/
+http://code.google.com/p/plda/wiki/PLDAQuickStart
+http://code.google.com/p/plda/wiki/PLDAManual
+http://code.google.com/p/semi-supervised-lda/
+
+本工具修改自PLDA (code.google.com/p/plda)：增加了在种子词基础上半监督学习的功能，可以实现对已有的topic基于规则的拆分，同时优化了原先工具的内存占用。
+
+1，增加功能1：
+   使用人工定义的种子词，拆分原先的topic结果，实现半监督学习。
+   LDA是个非监督的学习工具，最终得到的topic结果，在实际使用中常需要对部分TOPIC进行更细拆分，并希望在拆分过程中可以通过加入种子词实现半监督的学习。
+   本工具可以在非监督学习完成模型后，使用TOPIC规则文件在原先的模型基础上实现半监督学习。
+   TOPIC规则格式：
+   Topic id1 -> id2 种子词1 种子词2 种子词3 .... 种子词n
+        id1：需要拆分的TOPIC的id
+        id2：拆分后对应的TOPIC的id
+   注意:种子词的个数可以任意(包括0)
+        拆分后原先TOPIC已经不复存在。在定义id2时需要保证拆分后TOPIC id的连续。
+   如：
+   在无监督的LDA结果中 TOPIC 12 是疾病类，
+   现在希望对这个TOPIC拆分成 TOPIC a： 高血压， TOPIC b： 心脏病， TOPIC c： 其他
+   原先共100个TOPIC
+   TOPIC规则文件样例：
+   Topic 12 -> 12 高血压 血压 高血压 血压针
+   Topic 12 -> 99 心脏病 心脏病 冠心病 心肌
+   Topic 12 -> 100
+   半监督学习后，有102个Topic，即将原先Topic 12 拆分为  Topic 12，Topic 101，Topic 102。
+   
+   增加功能2：
+   在获得新的训练数据后，可以根据已有模型将新语料中新出现的term，分配到原先模型的各个topic上，并保持原先的term的分布不发生变化。需要传入 新词文件，格式为每行一个词
+   
+   增加功能3：
+   结合使用TOPIC规则文件和新词文件，可以实现基于种子词的半监督学习。
+   方法：在TOPIC规则文件中为每个topic定义种子词，将种子词之外的词全部加入新词文件。
+   如：为每个topic定义TOPIC规则：
+   Topic 0 -> 0 考试 成绩 试题 英语 报名
+   Topic 1 -> 1 直播 卫视 在线 电视 cctv 新闻
+   Topic 2 -> 2 团购 拉手	套餐 优惠
+   ....
+
+   新词文件：
+   中心
+   国庆
+   个人
+   最好
+   ....
+
+2，优化了内存
+   对文档中的term做了索引，降低了内存占有(根据实际情况有5倍到20倍的优化)，因此在训练时需要传入term的索引文件。并可以通过这个索引文件设置cutoff
+
+3，输入文件格式和输出文件有改动。(见下)
+
+使用方法：
+生成term索引文件
+python getwordindexfile.py $testpath/test.dat $testpath/wordindex.txt 0 20
+四个参数分别为：输入文件，输出文件，文件格式，cutoff值
+
+非监督学习
+mpiexec -n 8 $ldapath/mpi_lda --num_topics 100 --alpha 0.1 --beta 0.01 --training_data_file $testpath/test.dat --topic_distribution_file $testpath/topic_ --topic_assignments_file $testpath/assignments_ --model_file $testpath/lda_model_ --word_index_file $testpath/wordindex.txt --total_iterations 2000 --save_step 500 --file_type 0
+python ./view_model.py $testpath/lda_model_0-final.txt > $testpath/viewable_file.txt
+
+变量
+$ldapath: mpi_lda程序存放的路径
+$testpath: 工作目录，训练数据和输出结果都放在这个目录。
+
+输入文件：
+--training_data_file: 训练数据
+  docname word1 word1_count word2 word2_count word3 word3_count
+  docname为该行文档对于的文档名，可以是id号，与后面的内容用table分割。这个改动更加易于模型结果的分析。
+--word_index_file：term的索引文件
+  id term
+
+输出文件：
+--topic_distribution_file：文档上各个topic的分布,这是文件名的前缀,文件名如topic_0-001000.txt，表示第0个进程上第1000次迭代的结果。
+--topic_assignments_file：文档中各个term被分配的topic
+--model_file：模型文件,term上各个topic的分布
+
+参数：
+--alpha：LDA模型的超参数
+--beta：LDA模型的超参数
+--num_topics: topic的数量
+--total_iterations: 迭代次数
+--save_step：迭代保存
+
+半监督学习
+mpiexec -n 8 $ldapath/mpi_estc_lda --num_topics 104 --alpha 0.1 --beta 0.01 --rule_file $testpath/rule.txt --training_data_file $testpath/test.dat --new_model_file $testpath/new_lda_model_ --topic_distribution_file $testpath/new_topic_ --topic_assignments_file $testpath/new_assignments_ --burn_in_iterations 25 --total_iterations 2000 --file_type 0 --save_step 500 --new_word_file $testpath/newwords.txt --model_file $testpath/lda_model_0-final.txt
+
+变量
+$ldapath: mpi_estc_lda程序存放的路径
+$testpath: 工作目录，训练数据，规则文件和输出结果都放在这个目录。
+
+输入文件：
+rule.txt: TOPIC规则文件(见上)
+training.data: 训练数据
+newwords.txt: 新词文件
+lda_model_0-00500.txt： 原LDA模型
+
+输出文件：
+--topic_distribution_file：文档上各个topic的分布
+--topic_assignments_file：文档中各个term被分配的topic
+--model_file：模型文件,term上各个topic的分布
+
+参数：
+--alpha：LDA模型的超参数
+--beta：LDA模型的超参数
+--num_topics: 注意，这个topic数量是拆分后topic的总数量
+--burn_in_iterations：价值原始模型迭代的次数
+--total_iterations: 半监督的迭代次数
+--save_step：迭代保存
+
+程序已在20台Linux服务器，160个CPU上测试通过。
+联系方式：cyzhang9@mail.ustc.edu.cn 
+ 
 
