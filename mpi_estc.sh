@@ -1,0 +1,4 @@
+ldapath=/home/ldap/zhang/plda
+testpath=/home/ldap/zhang/plda/test
+mpiexec -n 8 $ldapath/mpi_estc_lda --num_topics 104 --alpha 0.1 --beta 0.01 --rule_file $testpath/rule.txt --training_data_file $testpath/test.dat --new_model_file $testpath/new_lda_model_ --topic_distribution_file $testpath/new_topic_ --topic_assignments_file $testpath/new_assignments_ --burn_in_iterations 25 --total_iterations 2000 --file_type 0 --save_step 500 --new_word_file $testpath/newwords.txt --model_file $testpath/lda_model_0-final.txt
+python ./view_model.py $testpath/new_lda_model_0-final.txt > $testpath/new_viewable_file.txt
