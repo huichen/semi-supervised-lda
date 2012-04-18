@@ -15,12 +15,12 @@ http://code.google.com/p/semi-supervised-lda/
    注意:种子词的个数可以任意(包括0)
         拆分后原先TOPIC已经不复存在。在定义id2时需要保证拆分后TOPIC id的连续。
    如：
-   在无监督的LDA结果中 TOPIC 12 是疾病类，
-   现在希望对这个TOPIC拆分成 TOPIC a： 高血压， TOPIC b： 心脏病， TOPIC c： 其他
+   在无监督的LDA结果中 TOPIC 12 是数码类，
+   现在希望对这个TOPIC拆分成 TOPIC a： 手机， TOPIC b： 电脑， TOPIC c： 其他
    原先共100个TOPIC
    TOPIC规则文件样例：
-   Topic 12 -> 12 高血压 血压 高血压 血压针
-   Topic 12 -> 99 心脏病 心脏病 冠心病 心肌
+   Topic 12 -> 12 手机 3G服务 移动通信
+   Topic 12 -> 99 台式机 平板电脑 笔记本电脑
    Topic 12 -> 100
    半监督学习后，有102个Topic，即将原先Topic 12 拆分为  Topic 12，Topic 101，Topic 102。
    
