@@ -43,6 +43,9 @@ http://code.google.com/p/semi-supervised-lda/
    最好
    ....
 
+   增加功能4：
+   在实际使用中的，更多的情况是利用一个已有的模型对一批海量文本进行topic预测。这里给出了一个在hadoop下使用MapReduce程序进行分布式计算的python脚本，需要安装hadoop，dumbo和python工具。
+
 2，优化了内存
    对文档中的term做了索引，降低了内存占有(根据实际情况有5倍到20倍的优化)，因此在训练时需要传入term的索引文件。并可以通过这个索引文件实现特征的灵活选取如过滤停用词或设置cutoff
 
@@ -54,6 +57,8 @@ python getwordindexfile.py $testpath/test.dat $testpath/wordindex.txt 0 20
 四个参数分别为：输入文件，输出文件，文件格式，cutoff值
 
 非监督学习
+示例脚本：mpi_lda.sh
+
 mpiexec -n 8 $ldapath/mpi_lda --num_topics 100 --alpha 0.1 --beta 0.01 --training_data_file $testpath/test.dat --topic_distribution_file $testpath/topic_ --topic_assignments_file $testpath/assignments_ --model_file $testpath/lda_model_ --word_index_file $testpath/wordindex.txt --total_iterations 2000 --save_step 500 --file_type 0
 python ./view_model.py $testpath/lda_model_0-final.txt > $testpath/viewable_file.txt
 
@@ -81,6 +86,7 @@ $testpath: 工作目录，训练数据和输出结果都放在这个目录。
 --save_step：迭代保存
 
 半监督学习
+示例脚本：mpi_estc.sh
 mpiexec -n 8 $ldapath/mpi_estc_lda --num_topics 104 --alpha 0.1 --beta 0.01 --rule_file $testpath/rule.txt --training_data_file $testpath/test.dat --new_model_file $testpath/new_lda_model_ --topic_distribution_file $testpath/new_topic_ --topic_assignments_file $testpath/new_assignments_ --burn_in_iterations 25 --total_iterations 2000 --file_type 0 --save_step 500 --new_word_file $testpath/newwords.txt --model_file $testpath/lda_model_0-final.txt
 
 变量
@@ -106,7 +112,18 @@ lda_model_0-00500.txt： 原LDA模型
 --total_iterations: 半监督的迭代次数
 --save_step：迭代保存
 
-程序已在20台Linux服务器，160个CPU上测试通过。
+hadoop上运行topic模型进行inference
+示例脚本：hadoop_infer_test.sh
+dumbo start lda_hadoop.py -hadoop /usr/lib/hadoop -input hadooptest.txt -output ./testout -file ${ldamodelfile} -cmdenv "LDAMODELFILE=${ldamodelfile}"
+$ldamodelfile为模型文件
+
+以上程序已全部在20台Linux服务器，160个CPU上测试通过。
+测试环境为
+Python 2.6
+dumbo 0.21.31
+Hadoop 0.20.2
+
+
 联系方式：cyzhang9@mail.ustc.edu.cn 
  
 
