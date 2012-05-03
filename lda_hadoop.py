@@ -1,6 +1,7 @@
 '''
 Created on 2011-5-30
 @author: cyzhang9@mail.ustc.edu.cn 
+http://code.google.com/p/semi-supervised-lda/
 '''
 
 #!/usr/bin/python
