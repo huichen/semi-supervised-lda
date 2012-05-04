@@ -47,7 +47,7 @@ total_iterations = int(os.environ.get('TITER',20))
 burn_in_iterations = int(os.environ.get('BITER',10))
 beta = float(os.environ.get('BETA',0.01))
 alpha = float(os.environ.get('ALPHA',0.1))
-ldamodelfile = os.environ.get('LDAMODELFILE','lda_model_0-final.txt')
+ldamodelfile = os.environ.get('LDAMODELFILE')
 
 num_topics = 0
 num_word = 0
