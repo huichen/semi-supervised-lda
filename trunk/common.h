@@ -207,7 +207,7 @@ struct DocumentWordTopicsPB {
   int32* mutable_wordtopics(int index) { return &wordtopics_[index]; }
 
   void add_wordtopics(const string& word_s,
-                      int word, const vector<int32>& topics) {
+                      int word, const vector<int32>& topics, bool estc = false) {
 //    words_s_.push_back(word_s);
     words_.push_back(word);
     wordtopics_start_index_.pop_back();
@@ -217,9 +217,12 @@ struct DocumentWordTopicsPB {
     }
     wordtopics_start_index_.push_back(wordtopics_.size());
 
-    for (size_t i = 0; i < topics.size(); ++i) {
-      vector<int32> emptylist;
-      wordtopicslist_.push_back(emptylist);
+    if (estc)
+    {
+      for (size_t i = 0; i < topics.size(); ++i) {
+        vector<int32> emptylist;
+        wordtopicslist_.push_back(emptylist);
+      }
     }
   }
   void CopyFrom(const DocumentWordTopicsPB& instance) { *this = instance; }
