@@ -112,7 +112,7 @@ int LoadAndInitTrainingCorpus(const string& corpus_file,
         } else {
           word_index = iter->second;
         }
-        document.add_wordtopics(word, word_index, topics);
+        document.add_wordtopics(word, word_index, topics, true);
       }
       corpus->push_back(new LDADocument(doc_name,document, num_topics));
     }
